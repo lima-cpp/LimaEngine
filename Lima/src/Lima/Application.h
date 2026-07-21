@@ -1,9 +1,13 @@
 #pragma once
 
-#include "Window.h"
-#include "Pipeline.h"
-#include "LimaDevice.h"
+#include "Vulkan/Window.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/LimaDevice.h"
+#include "Vulkan/SwapChain.h"
 #include "Core.h"
+
+#include <memory>
+#include <vector>
 
 namespace Lima {
 
@@ -14,18 +18,25 @@ namespace Lima {
 		static constexpr int HEIGHT = 600;
 
 		Application();
-		virtual ~Application();
+		~Application();
+
+		Application(const Application&) = delete;
+		Application &operator = (const Application &) = delete;
 
 		void Run();
 
 	private:
+		void createPipelineLayout();
+		void createPipeline();
+		void createCommandBuffers();
+		void drawFrame();
+
 		LimaWindow LimaWindow{ WIDTH, HEIGHT, "Lima Engine" };
 		LimaDevice LimaDevice{ LimaWindow };
-		LimaPipeline LimaPipeline{
-			LimaDevice,
-			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.vert.spv",
-			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.frag.spv",
-			LimaPipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)};
+		LimaSwapChain LimaSwapChain{ LimaDevice, LimaWindow.getExtent() };
+		std::unique_ptr<LimaPipeline> LimaPipeline;
+		VkPipelineLayout pipelineLayout;
+		std::vector<VkCommandBuffer> commandBuffers;
 	};
 
 	Application* CreateApplication();

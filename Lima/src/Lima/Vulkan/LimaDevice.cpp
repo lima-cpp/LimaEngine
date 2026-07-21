@@ -1,5 +1,5 @@
 #include "LimaDevice.h"
-#include "Log.h"
+#include "../Log.h"
 
 // std headers
 #include <cstring>
