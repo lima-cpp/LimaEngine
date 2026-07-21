@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "Log.h"
 
 namespace Lima {
 
@@ -12,9 +13,9 @@ namespace Lima {
 
 	void Application::Run()
 	{
-		while (true)
+		while (!LimaWindow.shouldClose())
 		{
-			// Update and render the application
+			glfwPollEvents();
 		}
 	}
 }

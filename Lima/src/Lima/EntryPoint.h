@@ -2,17 +2,21 @@
 
 #ifdef L_PLATFORM_WINDOWS
 
-extern Lima::Application* Lima::CreateApplication();
+#include <cstdlib>
+#include <stdexcept>
 
-int main(int argc, char** argv)
-{
+int main() {	
 	Lima::Log::Init();
-	L_CORE_WARN("Initialized Log!");
-	L_INFO("Hello! This is Lima Engine!");
+	Lima::Application app{};
 
-	auto app = Lima::CreateApplication();
-	app->Run();
-	delete app;
+	try {
+		app.Run();
+	} catch (const std::exception &e) {
+		L_CORE_ERROR("Application encountered an error: {0}", e.what());
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 

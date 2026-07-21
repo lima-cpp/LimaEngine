@@ -11,6 +11,8 @@ workspace "Lima"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+include "Lima/vendor/GLFW"
+
 project "Lima"
     location "Lima"
     kind "SharedLib"
@@ -27,7 +29,10 @@ project "Lima"
 
     includedirs
     {
-        "%{prj.name}/vendor/spdlog/include"
+        "%{prj.name}/vendor/spdlog/include",
+        "%{prj.name}/vendor/GLFW/include",
+        "%{prj.name}/vendor/glm/glm",
+        "%{prj.name}/vendor/VulkanSDK/1.4.350.0/Include"
     }
 
     buildoptions
@@ -38,6 +43,17 @@ project "Lima"
     disablewarnings
     {
         "4251"
+    }
+
+    libdirs
+    {
+        "%{prj.name}/vendor/VulkanSDK/1.4.350.0/Lib"
+    }
+
+    links
+    {
+        "GLFW",
+        "vulkan-1"
     }
 
     filter "system:windows"
@@ -85,7 +101,15 @@ project "Sandbox"
     includedirs
     {
         "Lima/vendor/spdlog/include",
+        "Lima/vendor/glm/glm",
+        "Lima/vendor/GLFW/include",
+        "Lima/vendor/VulkanSDK/1.4.350.0/Include",
         "Lima/src"
+    }
+
+    libdirs
+    {
+        "Lima/vendor/VulkanSDK/1.4.350.0/Lib"
     }
 
     buildoptions
@@ -100,7 +124,9 @@ project "Sandbox"
 
     links
     {
-        "Lima"
+        "Lima",
+        "GLFW",
+        "vulkan-1"
     }
 
     filter "system:windows"
