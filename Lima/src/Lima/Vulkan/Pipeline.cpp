@@ -106,6 +106,10 @@ namespace Lima {
 		}
 	}
 
+	void LimaPipeline::bind(VkCommandBuffer commandBuffer) {
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	}
+
 	void LimaPipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) {
 		VkShaderModuleCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -164,6 +168,14 @@ namespace Lima {
 		configInfo.colorBlendInfo.blendConstants[1] = 0.0f; // Optional
 		configInfo.colorBlendInfo.blendConstants[2] = 0.0f; // Optional
 		configInfo.colorBlendInfo.blendConstants[3] = 0.0f; // Optional
+
+		configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
+		configInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		configInfo.multisampleInfo.minSampleShading = 1.0f;          // Optional
+		configInfo.multisampleInfo.pSampleMask = nullptr;            // Optional
+		configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE; // Optional
+		configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;      // Optional
 
 		configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;

@@ -103,7 +103,7 @@ void LimaDevice::createInstance() {
   }
 
   if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create instance!");
+    throw std::runtime_error("Failed to create instance!");
   }
 
   hasGflwRequiredInstanceExtensions();

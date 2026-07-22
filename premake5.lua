@@ -32,7 +32,7 @@ project "Lima"
         "%{prj.name}/vendor/spdlog/include",
         "%{prj.name}/vendor/GLFW/include",
         "%{prj.name}/vendor/glm/glm",
-        "%{prj.name}/vendor/VulkanSDK/1.4.350.0/Include"
+        "C:/VulkanSDK/1.4.350.0/Include"
     }
 
     buildoptions
@@ -47,7 +47,7 @@ project "Lima"
 
     libdirs
     {
-        "%{prj.name}/vendor/VulkanSDK/1.4.350.0/Lib"
+        "C:/VulkanSDK/1.4.350.0/Lib"
     }
 
     links
@@ -103,13 +103,13 @@ project "Sandbox"
         "Lima/vendor/spdlog/include",
         "Lima/vendor/glm/glm",
         "Lima/vendor/GLFW/include",
-        "Lima/vendor/VulkanSDK/1.4.350.0/Include",
+        "C:/VulkanSDK/1.4.350.0/Include",
         "Lima/src"
     }
 
     libdirs
     {
-        "Lima/vendor/VulkanSDK/1.4.350.0/Lib"
+        "C:/VulkanSDK/1.4.350.0/Lib"
     }
 
     buildoptions
