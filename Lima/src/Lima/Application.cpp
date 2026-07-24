@@ -7,23 +7,34 @@
 namespace Lima {
 
 	Application::Application() {
+		loadModels();
 		createPipelineLayout();
 		createPipeline();
 		createCommandBuffers();
 	}
 
 	Application::~Application() {
-		vkDestroyPipelineLayout(LimaDevice.device(), pipelineLayout, nullptr);
+		vkDestroyPipelineLayout(m_LimaDevice.device(), pipelineLayout, nullptr);
 	}
 
 	void Application::Run()
 	{
-		while (!LimaWindow.shouldClose()) {
+		while (!m_LimaWindow.shouldClose()) {
 			glfwPollEvents();
 			drawFrame();
 		}
 
-		vkDeviceWaitIdle(LimaDevice.device());
+		vkDeviceWaitIdle(m_LimaDevice.device());
+	}
+
+	void Application::loadModels() {
+		std::vector<LimaModel::Vertex> vertices{
+			{{0.0f, -0.5f}},
+			{{0.5f, 0.5f}},
+			{{-0.5f, 0.5f}}
+		};
+
+		m_LimaModel = std::make_unique<LimaModel>(m_LimaDevice, vertices);
 	}
 
 	void Application::createPipelineLayout() {
@@ -33,32 +44,32 @@ namespace Lima {
 		pipelineLayoutInfo.pSetLayouts = nullptr;
 		pipelineLayoutInfo.pushConstantRangeCount = 0;
 		pipelineLayoutInfo.pPushConstantRanges = nullptr;
-		if (vkCreatePipelineLayout(LimaDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(m_LimaDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 	}
 
 	void Application::createPipeline() {
-		auto pipelineConfig = LimaPipeline::defaultPipelineConfigInfo(LimaSwapChain.width(), LimaSwapChain.height());
-		pipelineConfig.renderPass = LimaSwapChain.getRenderPass();
+		auto pipelineConfig = LimaPipeline::defaultPipelineConfigInfo(m_LimaSwapChain.width(), m_LimaSwapChain.height());
+		pipelineConfig.renderPass = m_LimaSwapChain.getRenderPass();
 		pipelineConfig.pipelineLayout = pipelineLayout;
-		LimaPipeline = std::make_unique<Lima::LimaPipeline>(
-			LimaDevice, 
+		m_LimaPipeline = std::make_unique<Lima::LimaPipeline>(
+			m_LimaDevice, 
 			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.vert.spv", 
 			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.frag.spv", 
 			pipelineConfig);
 	}
 
 	void Application::createCommandBuffers() {
-		commandBuffers.resize(LimaSwapChain.imageCount());
+		commandBuffers.resize(m_LimaSwapChain.imageCount());
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = LimaDevice.getCommandPool();
+		allocInfo.commandPool = m_LimaDevice.getCommandPool();
 		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-		if (vkAllocateCommandBuffers(LimaDevice.device(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+		if (vkAllocateCommandBuffers(m_LimaDevice.device(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
 
@@ -72,11 +83,11 @@ namespace Lima {
 
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = LimaSwapChain.getRenderPass();
-			renderPassInfo.framebuffer = LimaSwapChain.getFrameBuffer(i);
+			renderPassInfo.renderPass = m_LimaSwapChain.getRenderPass();
+			renderPassInfo.framebuffer = m_LimaSwapChain.getFrameBuffer(i);
 
 			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = LimaSwapChain.getSwapChainExtent();
+			renderPassInfo.renderArea.extent = m_LimaSwapChain.getSwapChainExtent();
 
 			std::array<VkClearValue, 2> clearValues{};
 			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -86,8 +97,9 @@ namespace Lima {
 			
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			LimaPipeline->bind(commandBuffers[i]);
-			vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+			m_LimaPipeline->bind(commandBuffers[i]);
+			m_LimaModel->bind(commandBuffers[i]);
+			m_LimaModel->draw(commandBuffers[i]);
 
 			vkCmdEndRenderPass(commandBuffers[i]);
 			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
@@ -99,13 +111,13 @@ namespace Lima {
 
 	void Application::drawFrame() {
 		uint32_t imageIndex;
-		auto result = LimaSwapChain.acquireNextImage(&imageIndex);
+		auto result = m_LimaSwapChain.acquireNextImage(&imageIndex);
 
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 
-		result = LimaSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+		result = m_LimaSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
 		if (result != VK_SUCCESS) {
 			throw std::runtime_error("Failed to present swap chain image!");
 		}

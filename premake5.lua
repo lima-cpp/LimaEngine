@@ -31,7 +31,7 @@ project "Lima"
     {
         "%{prj.name}/vendor/spdlog/include",
         "%{prj.name}/vendor/GLFW/include",
-        "%{prj.name}/vendor/glm/glm",
+        "%{prj.name}/vendor/glm",
         "C:/VulkanSDK/1.4.350.0/Include"
     }
 
@@ -101,7 +101,7 @@ project "Sandbox"
     includedirs
     {
         "Lima/vendor/spdlog/include",
-        "Lima/vendor/glm/glm",
+        "Lima/vendor/glm",
         "Lima/vendor/GLFW/include",
         "C:/VulkanSDK/1.4.350.0/Include",
         "Lima/src"

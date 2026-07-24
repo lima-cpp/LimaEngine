@@ -4,6 +4,7 @@
 #include "Vulkan/Pipeline.h"
 #include "Vulkan/LimaDevice.h"
 #include "Vulkan/SwapChain.h"
+#include "Model.h"
 #include "Core.h"
 
 #include <memory>
@@ -26,17 +27,19 @@ namespace Lima {
 		void Run();
 
 	private:
+		void loadModels();
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
 		void drawFrame();
 
-		LimaWindow LimaWindow{ WIDTH, HEIGHT, "Lima Engine" };
-		LimaDevice LimaDevice{ LimaWindow };
-		LimaSwapChain LimaSwapChain{ LimaDevice, LimaWindow.getExtent() };
-		std::unique_ptr<LimaPipeline> LimaPipeline;
+		LimaWindow m_LimaWindow{ WIDTH, HEIGHT, "Lima Engine" };
+		LimaDevice m_LimaDevice{ m_LimaWindow };
+		LimaSwapChain m_LimaSwapChain{ m_LimaDevice, m_LimaWindow.getExtent() };
+		std::unique_ptr<LimaPipeline> m_LimaPipeline;
 		VkPipelineLayout pipelineLayout;
 		std::vector<VkCommandBuffer> commandBuffers;
+		std::unique_ptr<LimaModel> m_LimaModel;
 	};
 
 	Application* CreateApplication();
