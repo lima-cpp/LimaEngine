@@ -8,6 +8,7 @@
 // std lib headers
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Lima {
 
@@ -16,10 +17,11 @@ class LimaSwapChain {
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
   LimaSwapChain(LimaDevice &deviceRef, VkExtent2D windowExtent);
+  LimaSwapChain(LimaDevice& deviceRef, VkExtent2D windowExtent, std::shared_ptr<LimaSwapChain> previous);
   ~LimaSwapChain();
 
   LimaSwapChain(const LimaSwapChain&) = delete;
-  void operator=(const LimaSwapChain&) = delete;
+  LimaSwapChain& operator=(const LimaSwapChain&) = delete;
 
   VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
   VkRenderPass getRenderPass() { return renderPass; }
@@ -39,12 +41,13 @@ class LimaSwapChain {
   VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
  private:
-  void createSwapChain();
-  void createImageViews();
-  void createDepthResources();
-  void createRenderPass();
-  void createFramebuffers();
-  void createSyncObjects();
+     void initOldSwapChain();
+     void createSwapChain();
+     void createImageViews();
+     void createDepthResources();
+     void createRenderPass();
+     void createFramebuffers();
+     void createSyncObjects();
 
   // Helper functions
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -69,6 +72,7 @@ class LimaSwapChain {
   VkExtent2D windowExtent;
 
   VkSwapchainKHR swapChain;
+  std::shared_ptr<LimaSwapChain> oldSwapChain;
 
   std::vector<VkSemaphore> imageAvailableSemaphores;
   std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -77,4 +81,4 @@ class LimaSwapChain {
   size_t currentFrame = 0;
 };
 
-}  // namespace lve
+}  // namespace Lima

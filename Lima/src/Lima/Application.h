@@ -31,11 +31,14 @@ namespace Lima {
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
+		void freeCommandBuffers();
 		void drawFrame();
+		void recreateSwapChain();
+		void recordCommandBuffer(int imageIndex);
 
 		LimaWindow m_LimaWindow{ WIDTH, HEIGHT, "Lima Engine" };
 		LimaDevice m_LimaDevice{ m_LimaWindow };
-		LimaSwapChain m_LimaSwapChain{ m_LimaDevice, m_LimaWindow.getExtent() };
+		std::unique_ptr<LimaSwapChain> m_LimaSwapChain;
 		std::unique_ptr<LimaPipeline> m_LimaPipeline;
 		VkPipelineLayout pipelineLayout;
 		std::vector<VkCommandBuffer> commandBuffers;

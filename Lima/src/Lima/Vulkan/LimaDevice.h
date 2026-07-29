@@ -35,7 +35,7 @@ class LimaDevice {
 
   // Not copyable or movable
   LimaDevice(const LimaDevice&) = delete;
-  void operator=(const LimaDevice&) = delete;
+  LimaDevice& operator=(const LimaDevice&) = delete;
   LimaDevice(LimaDevice&&) = delete;
   LimaDevice&operator=(LimaDevice&&) = delete;
 

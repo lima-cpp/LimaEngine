@@ -7,6 +7,9 @@
 
 int main() {	
 	Lima::Log::Init();
+	L_INFO("Log initialized");
+	L_WARN("Lima Engine console");
+
 	Lima::Application app{};
 
 	try {

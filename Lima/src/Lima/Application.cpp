@@ -9,7 +9,7 @@ namespace Lima {
 	Application::Application() {
 		loadModels();
 		createPipelineLayout();
-		createPipeline();
+		recreateSwapChain();
 		createCommandBuffers();
 	}
 
@@ -19,6 +19,7 @@ namespace Lima {
 
 	void Application::Run()
 	{
+
 		while (!m_LimaWindow.shouldClose()) {
 			glfwPollEvents();
 			drawFrame();
@@ -29,9 +30,9 @@ namespace Lima {
 
 	void Application::loadModels() {
 		std::vector<LimaModel::Vertex> vertices{
-			{{0.0f, -0.5f}},
-			{{0.5f, 0.5f}},
-			{{-0.5f, 0.5f}}
+			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 		};
 
 		m_LimaModel = std::make_unique<LimaModel>(m_LimaDevice, vertices);
@@ -50,18 +51,45 @@ namespace Lima {
 	}
 
 	void Application::createPipeline() {
-		auto pipelineConfig = LimaPipeline::defaultPipelineConfigInfo(m_LimaSwapChain.width(), m_LimaSwapChain.height());
-		pipelineConfig.renderPass = m_LimaSwapChain.getRenderPass();
+		assert(m_LimaSwapChain != nullptr && "Cannot create pipeline before swap chain!");
+		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout!");
+
+		PipelineConfigInfo pipelineConfig{};
+		LimaPipeline::defaultPipelineConfigInfo(pipelineConfig);
+		pipelineConfig.renderPass = m_LimaSwapChain->getRenderPass();
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		m_LimaPipeline = std::make_unique<Lima::LimaPipeline>(
 			m_LimaDevice, 
-			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.vert.spv", 
-			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.frag.spv", 
+			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.vert.spv",
+			"C:/LimaEngine/Lima/src/Lima/Shaders/simple_shader.frag.spv",
 			pipelineConfig);
 	}
 
+	void Application::recreateSwapChain() {
+		auto extent = m_LimaWindow.getExtent();
+		while (extent.width == 0 || extent.height == 0) {
+			extent = m_LimaWindow.getExtent();
+			glfwWaitEvents();
+		}
+
+		vkDeviceWaitIdle(m_LimaDevice.device());
+
+		if (m_LimaSwapChain == nullptr) {
+			m_LimaSwapChain = std::make_unique<LimaSwapChain>(m_LimaDevice, extent);
+		}
+		else {
+			m_LimaSwapChain = std::make_unique<LimaSwapChain>(m_LimaDevice, extent, std::move(m_LimaSwapChain));
+			if (m_LimaSwapChain->imageCount() != commandBuffers.size()) {
+				freeCommandBuffers();
+				createCommandBuffers();
+			}
+		}
+
+		createPipeline();
+	}
+
 	void Application::createCommandBuffers() {
-		commandBuffers.resize(m_LimaSwapChain.imageCount());
+		commandBuffers.resize(m_LimaSwapChain->imageCount());
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -72,52 +100,80 @@ namespace Lima {
 		if (vkAllocateCommandBuffers(m_LimaDevice.device(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
+	}
 
-		for (int i = 0; i < commandBuffers.size(); i++) {
-			VkCommandBufferBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			
-			if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-				throw std::runtime_error("Failed to begin recording command buffer!");
-			}
+	void Application::freeCommandBuffers() {
+		vkFreeCommandBuffers(m_LimaDevice.device(), m_LimaDevice.getCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+		commandBuffers.clear();
+	}
 
-			VkRenderPassBeginInfo renderPassInfo{};
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = m_LimaSwapChain.getRenderPass();
-			renderPassInfo.framebuffer = m_LimaSwapChain.getFrameBuffer(i);
+	void Application::recordCommandBuffer(int imageIndex) {
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = m_LimaSwapChain.getSwapChainExtent();
+		if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to begin recording command buffer!");
+		}
 
-			std::array<VkClearValue, 2> clearValues{};
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			renderPassInfo.pClearValues = clearValues.data();
-			
-			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_LimaSwapChain->getRenderPass();
+		renderPassInfo.framebuffer = m_LimaSwapChain->getFrameBuffer(imageIndex);
 
-			m_LimaPipeline->bind(commandBuffers[i]);
-			m_LimaModel->bind(commandBuffers[i]);
-			m_LimaModel->draw(commandBuffers[i]);
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = m_LimaSwapChain->getSwapChainExtent();
 
-			vkCmdEndRenderPass(commandBuffers[i]);
-			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-				throw std::runtime_error("Failed to record command buffer!");
-			}
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
 
+		vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(m_LimaSwapChain->getSwapChainExtent().width);
+		viewport.height = static_cast<float>(m_LimaSwapChain->getSwapChainExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		VkRect2D scissor{ {0, 0}, m_LimaSwapChain->getSwapChainExtent() };
+		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+
+		m_LimaPipeline->bind(commandBuffers[imageIndex]);
+		m_LimaModel->bind(commandBuffers[imageIndex]);
+		m_LimaModel->draw(commandBuffers[imageIndex]);
+
+		vkCmdEndRenderPass(commandBuffers[imageIndex]);
+		if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to record command buffer!");
 		}
 	}
 
 	void Application::drawFrame() {
 		uint32_t imageIndex;
-		auto result = m_LimaSwapChain.acquireNextImage(&imageIndex);
+		auto result = m_LimaSwapChain->acquireNextImage(&imageIndex);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			recreateSwapChain();
+			return;
+		}
 
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 
-		result = m_LimaSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+		recordCommandBuffer(imageIndex);
+		result = m_LimaSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_LimaWindow.wasWindowResized()) {
+			m_LimaWindow.resetWindowResizedFlag();
+			recreateSwapChain();
+			return;
+		}
+
 		if (result != VK_SUCCESS) {
 			throw std::runtime_error("Failed to present swap chain image!");
 		}

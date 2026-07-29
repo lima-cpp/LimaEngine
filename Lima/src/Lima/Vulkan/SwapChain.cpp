@@ -14,13 +14,23 @@ namespace Lima {
 
     LimaSwapChain::LimaSwapChain(LimaDevice &deviceRef, VkExtent2D extent)
     : device{deviceRef}, windowExtent{extent} {
-  createSwapChain();
-  createImageViews();
-  createRenderPass();
-  createDepthResources();
-  createFramebuffers();
-  createSyncObjects();
+        initOldSwapChain();
 }
+    LimaSwapChain::LimaSwapChain(LimaDevice& deviceRef, VkExtent2D extent, std::shared_ptr<LimaSwapChain> previous)
+        : device{ deviceRef }, windowExtent{ extent }, oldSwapChain(previous) {
+        initOldSwapChain();
+
+        oldSwapChain = nullptr;
+    }
+
+    void LimaSwapChain::initOldSwapChain() {
+        createSwapChain();
+        createImageViews();
+        createRenderPass();
+        createDepthResources();
+        createFramebuffers();
+        createSyncObjects();
+    }
 
     LimaSwapChain::~LimaSwapChain() {
   for (auto imageView : swapChainImageViews) {
@@ -163,7 +173,9 @@ void LimaSwapChain::createSwapChain() {
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
 
-  createInfo.oldSwapchain = VK_NULL_HANDLE;
+  createInfo.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain;
+
+
 
   if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create swap chain!");
@@ -415,4 +427,4 @@ VkFormat LimaSwapChain::findDepthFormat() {
       VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-}  // namespace lve
+}  // namespace Lima

@@ -10,6 +10,3 @@ Intermediates/
 **.vcxproj.filters
 **.vcxproj.user
 **.csproj
-Lima/vendor/VulkanSDK/1.4.350.0/Lib/shaderc_combined.lib
-Lima/vendor/VulkanSDK/1.4.350.0/Lib/SPIRV-Tools-opt.lib
-Lima/vendor/VulkanSDK/1.4.350.0/Lib/SPIRV-Tools-optd.lib

@@ -14,6 +14,7 @@ namespace Lima {
 
 		struct Vertex {
 			glm::vec2 position;
+			glm::vec3 color;
 
 			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
@@ -31,7 +32,7 @@ namespace Lima {
 	private:
 		void createVertexBuffers(const std::vector<Vertex> &vertices);
 
-		LimaDevice& device;
+		LimaDevice& m_LimaDevice;
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
 		uint32_t vertexCount;
