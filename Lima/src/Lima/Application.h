@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Vulkan/Window.h"
-#include "Vulkan/Pipeline.h"
 #include "Vulkan/LimaDevice.h"
-#include "Vulkan/SwapChain.h"
+#include "Renderer/Renderer.h"
 #include "GameObject.h"
 #include "Core.h"
 
@@ -28,21 +27,11 @@ namespace Lima {
 
 	private:
 		void loadGameObjects();
-		void createPipelineLayout();
-		void createPipeline();
-		void createCommandBuffers();
-		void freeCommandBuffers();
-		void drawFrame();
-		void recreateSwapChain();
-		void recordCommandBuffer(int imageIndex);
-		void renderGameObjects(VkCommandBuffer commandBuffer);
 
 		LimaWindow m_LimaWindow{ WIDTH, HEIGHT, "Lima Engine" };
 		LimaDevice m_LimaDevice{ m_LimaWindow };
-		std::unique_ptr<LimaSwapChain> m_LimaSwapChain;
-		std::unique_ptr<LimaPipeline> m_LimaPipeline;
-		VkPipelineLayout pipelineLayout;
-		std::vector<VkCommandBuffer> commandBuffers;
+		LimaRenderer m_LimaRenderer{ m_LimaWindow, m_LimaDevice };
+
 		std::vector<LimaGameObject> m_GameObjects{};
 	};
 
