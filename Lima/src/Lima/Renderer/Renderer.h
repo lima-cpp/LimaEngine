@@ -20,6 +20,7 @@ namespace Lima {
 		LimaRenderer& operator = (const LimaRenderer&) = delete;
 
 		VkRenderPass getSwapChainRenderPass() const { return m_LimaSwapChain->getRenderPass(); }
+		float getAspectRatio() const { return m_LimaSwapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; }
 
 		VkCommandBuffer getCurrentCommandBuffer() const {

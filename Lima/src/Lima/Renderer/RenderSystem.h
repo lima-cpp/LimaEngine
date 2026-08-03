@@ -3,6 +3,7 @@
 #include "../Vulkan/Pipeline.h"
 #include "../Vulkan/LimaDevice.h"
 #include "../GameObject.h"
+#include "Camera.h"
 
 #include <memory>
 #include <vector>
@@ -18,7 +19,7 @@ namespace Lima {
 		RenderSystem(const RenderSystem&) = delete;
 		RenderSystem& operator = (const RenderSystem&) = delete;
 
-		void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<LimaGameObject> &m_GameObjects);
+		void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<LimaGameObject> &m_GameObjects, const LimaCamera &camera);
 
 	private:
 		void createPipelineLayout();
