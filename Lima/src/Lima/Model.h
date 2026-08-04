@@ -20,7 +20,12 @@ namespace Lima {
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 		};
 
-		LimaModel(LimaDevice &device, const std::vector<Vertex> &vertices);
+		struct Builder {
+			std::vector<Vertex> vertices{};
+			std::vector<uint32_t> indices{};
+		};
+
+		LimaModel(LimaDevice &device, const LimaModel::Builder &builder);
 		~LimaModel();
 
 		LimaModel(const LimaModel&) = delete;
@@ -31,10 +36,16 @@ namespace Lima {
 
 	private:
 		void createVertexBuffers(const std::vector<Vertex> &vertices);
+		void createIndexBuffer(const std::vector<uint32_t> &indices);
 
 		LimaDevice& m_LimaDevice;
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
 		uint32_t vertexCount;
+
+		bool hasIndexBuffer = false;
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+		uint32_t indexCount;
 	};
 }
